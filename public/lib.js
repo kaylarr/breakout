@@ -36,7 +36,11 @@ Ball.prototype = {
     this.x += this.getDx();
 
     var newY = this.y - this.getDy();
-    if (newY + this.radius > _canvas.height || newY - this.radius < 0) { this.reverseDy(); }
+    if (newY - this.radius < 0) { this.reverseDy(); }
+    else if (newY + this.radius > _canvas.height) {
+      console.log("Bottom");
+      this.reverseDy();
+    }
     this.y -= this.getDy();
   }
 }
@@ -49,7 +53,7 @@ function Paddle(obj) {
   this.speed = obj.speed;
 
   this.x = _canvas.width / 2;
-  this.centerFromBottom = _canvas.height - this.height - distanceFromBottom;
+  this.y = _canvas.height - this.height - distanceFromBottom;
 }
 
 Paddle.prototype = {
@@ -58,14 +62,16 @@ Paddle.prototype = {
     document.addEventListener('keyup', this, false);
   },
 
-  canMoveLeft:  function () { return this.x > 0; },
-  canMoveRight: function () { return this.x < _canvas.width - this.width; },
+  canMoveLeft:  function() { return this.x > 0; },
+  canMoveRight: function() { return this.x < _canvas.width - this.width; },
+  canMoveUp:    function() { return this.y - this.height > 0 },
+  canMoveDown:  function() { return this.y + this.height < _canvas.height },
 
   draw: function() {
     this.updatePosition();
 
     _context.beginPath();
-    _context.rect(this.x, this.centerFromBottom, this.width, this.height);
+    _context.rect(this.x, this.y, this.width, this.height);
     _context.fillStyle = '#fff';
     _context.fill();
     _context.closePath();
@@ -74,23 +80,32 @@ Paddle.prototype = {
   handleEvent: function(event) {
     switch(event.type) {
       case 'keydown':
-        if (event.keyCode == 39) { this.keyRight = true; }
-        else if (event.keyCode == 37) { this.keyLeft = true; }
+        if      (event.keyCode == 37) { this.keyLeft  = true; }
+        else if (event.keyCode == 38) { this.keyUp    = true; }
+        else if (event.keyCode == 39) { this.keyRight = true; }
+        else if (event.keyCode == 40) { this.keyDown  = true; }
         break;
 
       case 'keyup':
-        if (event.keyCode == 39) { this.keyRight = false; }
-        else if (event.keyCode == 37) { this.keyLeft = false; }
+        if      (event.keyCode == 37) { this.keyLeft  = false; }
+        else if (event.keyCode == 38) { this.keyUp    = false; }
+        else if (event.keyCode == 39) { this.keyRight = false; }
+        else if (event.keyCode == 40) { this.keyDown  = false; }
         break;
     }
   },
 
-  isMovingLeft:  function() { return this.keyLeft && !this.keyRight; },
+  isMovingLeft:  function() { return this.keyLeft  && !this.keyRight; },
   isMovingRight: function() { return this.keyRight && !this.keyLeft; },
+  isMovingUp:    function() { return this.keyUp    && !this.keyDown; },
+  isMovingDown:  function() { return this.keyDown  && !this.keyUp; },
 
   updatePosition: function() {
-    if (this.isMovingLeft() && this.canMoveLeft() ) { this.x -= this.speed; }
-    else if (this.isMovingRight() && this.canMoveRight() ) { this.x += this.speed; }
+    if (this.isMovingLeft() && this.canMoveLeft()) { this.x -= this.speed; }
+    else if (this.isMovingRight() && this.canMoveRight()) { this.x += this.speed; }
+
+    if (this.isMovingUp() && this.canMoveUp()) { this.y -= this.speed; }
+    else if (this.isMovingDown() && this.canMoveDown()) { this.y += this.speed; }
   }
 }
 
