@@ -8,9 +8,9 @@ _context.clear = function() { this.clearRect(0, 0, _canvas.width, _canvas.height
 
 var
   framesPerSecond = 60,
-  paddle = new Paddle({width: 200, speed: 2}),
+  paddle = new Paddle({height: 25, width: 150, speed: 20}),
   balls = [
-    new Ball({radius: 50, speed: 2}),
+    new Ball({radius: 25, speed: 8}),
   ],
   bricks = [],
   _obstacles = [paddle]

@@ -26,7 +26,7 @@ function addPrototypeFunctions(proto, functions) {
 
 function Rectangle(obj) {
   this.width = obj.width;
-  this.height = obj.height || obj.width;
+  this.height = obj.height;
   this.x = obj.x;
   this.y = obj.y;
 }
@@ -59,8 +59,6 @@ addPrototypeFunctions(Paddle.prototype, {
 
   canMoveLeft:  function() { return this.x > 0; },
   canMoveRight: function() { return this.x < _canvas.width - this.width; },
-  canMoveUp:    function() { return this.y - this.height > 0 },
-  canMoveDown:  function() { return this.y + this.height < _canvas.height },
 
   draw: function() {
     this.updatePosition();
@@ -71,31 +69,23 @@ addPrototypeFunctions(Paddle.prototype, {
     switch(event.type) {
       case 'keydown':
         if      (event.keyCode == 37) { this.keyLeft  = true; }
-        else if (event.keyCode == 38) { this.keyUp    = true; }
         else if (event.keyCode == 39) { this.keyRight = true; }
-        else if (event.keyCode == 40) { this.keyDown  = true; }
         break;
 
       case 'keyup':
         if      (event.keyCode == 37) { this.keyLeft  = false; }
-        else if (event.keyCode == 38) { this.keyUp    = false; }
         else if (event.keyCode == 39) { this.keyRight = false; }
-        else if (event.keyCode == 40) { this.keyDown  = false; }
         break;
     }
   },
 
+  isMoving: function() { return this.isMovingLeft() || this.isMovingRight(); },
   isMovingLeft:  function() { return this.keyLeft  && !this.keyRight; },
   isMovingRight: function() { return this.keyRight && !this.keyLeft; },
-  isMovingUp:    function() { return this.keyUp    && !this.keyDown; },
-  isMovingDown:  function() { return this.keyDown  && !this.keyUp; },
 
   updatePosition: function() {
     if (this.isMovingLeft() && this.canMoveLeft()) { this.x -= this.speed; }
     else if (this.isMovingRight() && this.canMoveRight()) { this.x += this.speed; }
-
-    if (this.isMovingUp() && this.canMoveUp()) { this.y -= this.speed; }
-    else if (this.isMovingDown() && this.canMoveDown()) { this.y += this.speed; }
   }
 });
 
@@ -113,40 +103,44 @@ addPrototypeFunctions(Brick.prototype, {
 
 function Ball(obj) {
   this.radius = obj.radius;
-  this.speed = obj.speed;
 
   this.x = _canvas.width / 2;
   this.y = _canvas.height /2;
 
-  var dx = obj.speed;
-  var dy = obj.speed;
-
-  this.getDx = function() { return dx; };
-  this.getDy = function() { return dy; };
-
-  this.reverseDx = function() { dx = -dx; };
-  this.reverseDy = function() { dy = -dy; };
+  this.dx = obj.speed;
+  this.dy = obj.speed;
 }
 
 addPrototypeFunctions(Ball.prototype, {
-  newY: function() { return this.y - this.getDy(); },
-  newX: function() { return this.x + this.getDx(); },
+
+  newY: function() { return this.y - this.dy; },
+  newX: function() { return this.x + this.dx; },
 
   checkBoundaryCollisions: function() {
     if (this.newY() - this.radius < 0) { this.reverseDy(); }
     else if (this.newY() + this.radius > _canvas.height) { this.reverseDy(); _app.endGame(); }
-    this.y -= this.getDy();
+    this.y -= this.dy;
 
     if (this.newX() + this.radius > _canvas.width || this.newX() - this.radius < 0) { this.reverseDx(); }
-    this.x += this.getDx();
+    this.x += this.dx;
   },
 
   checkObstacleCollisions: function() {
     for (var i = 0; i < _obstacles.length; i++) {
-      var rect = _obstacles[i];
-      if (this.willHitRectangle(rect)) {
-        if (this.hitsHorizontal(rect)) { this.reverseDy(); }
-        else { this.reverseDx(); }
+      var object = _obstacles[i];
+
+      if (this.willHit(object)) {
+        this.reverseDy();
+
+        if (object instanceof Paddle) {
+          if (object.isMoving() && this.matchesDirectionOf(object)) {
+            this.speedUp();
+          } else if (object.isMoving()) {
+            this.speedDown();
+          } else {
+            console.log("stay the same speed");
+          }
+        }
       }
     }
   },
@@ -161,8 +155,23 @@ addPrototypeFunctions(Ball.prototype, {
     _context.closePath();
   },
 
-  hitsHorizontal: function(rectangle) {
-    return fallsWithinX(rectangle) 
+  matchesDirectionOf: function(object) {
+    if (object.isMovingRight())     { return this.dx > 0; }
+    else if (object.isMovingLeft()) { return this.dx < 0; }
+    else { return false; }
+  },
+
+  reverseDx: function() { this.dx = -this.dx; },
+  reverseDy: function() { this.dy = -this.dy; },
+
+  speedUp: function () {
+    console.log("speed up!");
+    this.dx > 0 ? this.dx++ : this.dx--
+  },
+
+  speedDown: function() {
+    console.log("speed down..");
+    this.dx < 0 ? this.dx++ : this.dx--
   },
 
   updatePosition: function() {
@@ -170,17 +179,17 @@ addPrototypeFunctions(Ball.prototype, {
     this.checkObstacleCollisions();
   },
 
-  willHitRectangle: function(rectangle) {
-    return this.fallsWithinX(rectangle) && this.fallsWithinY(rectangle);
+  willHit: function(object) {
+    return this.withinX(object) && this.withinY(object);
   },
 
-  fallsWithinX: function(rectangle) {
-    return this.newX() + this.radius >= rectangle.x &&
-           this.newX() - this.radius <= rectangle.x + rectangle.width;
+  withinX: function(object) {
+    return this.newX() + this.radius >= object.x &&
+           this.newX() - this.radius <= object.x + object.width;
   },
 
-  fallsWithinY: function(rectangle) {
-    return this.newY() + this.radius >= rectangle.y &&
-           this.newY() - this.radius <= rectangle.y + rectangle.height;
+  withinY: function(object) {
+    return this.newY() + this.radius >= object.y &&
+           this.newY() - this.radius <= object.y + object.height;
   }
 });
