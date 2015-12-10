@@ -18,9 +18,16 @@ var
 
 paddle.addListeners();
 
-setInterval(function() {
+var _playing = true;
+
+var game = setInterval(function() {
   _context.clear();
-  balls.forEach(function(ball) { ball.draw(); });
-  bricks.forEach(function(brick) { brick.draw(); });
-  paddle.draw();
+  if (_playing) {
+    balls.forEach(function(ball) { ball.draw(); });
+    bricks.forEach(function(brick) { brick.draw(); });
+    paddle.draw();
+  } else {
+    paddle.draw();
+    clearInterval(game);
+  }
 }, 1000 / framesPerSecond);

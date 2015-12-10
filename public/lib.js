@@ -3,12 +3,6 @@ function initCanvas() {
   _context = _canvas.getContext('2d');
 }
 
-var _app = {
-  endGame: function() {
-    console.log("Bottom");
-  }
-};
-
 // Inheritance assistants
 
 function inheritPrototype(child, parent) {
@@ -117,12 +111,15 @@ addPrototypeFunctions(Ball.prototype, {
   newX: function() { return this.x + this.dx; },
 
   checkBoundaryCollisions: function() {
-    if (this.newY() - this.radius < 0) { this.reverseDy(); }
-    else if (this.newY() + this.radius > _canvas.height) { this.reverseDy(); _app.endGame(); }
-    this.y -= this.dy;
+    if (this.newY() - this.radius < 0) {
+      this.reverseDy();
+    } else if (this.newY() + this.radius > _canvas.height) {
+      this.hitTheBottom();
+    }
 
-    if (this.newX() + this.radius > _canvas.width || this.newX() - this.radius < 0) { this.reverseDx(); }
-    this.x += this.dx;
+    if (this.newX() + this.radius > _canvas.width || this.newX() - this.radius < 0) {
+      this.reverseDx();
+    }
   },
 
   checkObstacleCollisions: function() {
@@ -131,16 +128,7 @@ addPrototypeFunctions(Ball.prototype, {
 
       if (this.willHit(object)) {
         this.reverseDy();
-
-        if (object instanceof Paddle) {
-          if (object.isMoving() && this.matchesDirectionOf(object)) {
-            this.speedUp();
-          } else if (object.isMoving()) {
-            this.speedDown();
-          } else {
-            console.log("stay the same speed");
-          }
-        }
+        if (object instanceof Paddle) { this.reactToMovementOf(object); }
       }
     }
   },
@@ -155,28 +143,44 @@ addPrototypeFunctions(Ball.prototype, {
     _context.closePath();
   },
 
+  hitTheBottom: function() {
+    this.reverseDy();
+    this.superSpeed();
+
+    if (this.isTooFast()) {
+      alert("Game Over");
+      _playing = false;
+    }
+  },
+
+  isTooFast: function() { return this.dy > 30; },
+
   matchesDirectionOf: function(object) {
     if (object.isMovingRight())     { return this.dx > 0; }
     else if (object.isMovingLeft()) { return this.dx < 0; }
     else { return false; }
   },
 
+  reactToMovementOf: function(object) {
+    if (object.isMoving() && this.matchesDirectionOf(object)) {
+      this.speedUp();
+    } else if (object.isMoving()) {
+      this.speedDown();
+    }
+  },
+
   reverseDx: function() { this.dx = -this.dx; },
   reverseDy: function() { this.dy = -this.dy; },
 
-  speedUp: function () {
-    console.log("speed up!");
-    this.dx > 0 ? this.dx++ : this.dx--
-  },
-
-  speedDown: function() {
-    console.log("speed down..");
-    this.dx < 0 ? this.dx++ : this.dx--
-  },
+  speedUp:    function() { this.dx > 0 ? this.dx++ : this.dx },
+  speedDown:  function() { this.dx < 0 ? this.dx++ : this.dx },
+  superSpeed: function() { this.dy = this.dy + 2; },
 
   updatePosition: function() {
     this.checkBoundaryCollisions();
     this.checkObstacleCollisions();
+    this.x += this.dx;
+    this.y -= this.dy;
   },
 
   willHit: function(object) {
