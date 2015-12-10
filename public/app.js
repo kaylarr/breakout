@@ -1,4 +1,4 @@
-init();
+initCanvas();
 
 _canvas.width  = window.innerWidth;
 _canvas.height = window.innerHeight;
@@ -8,23 +8,19 @@ _context.clear = function() { this.clearRect(0, 0, _canvas.width, _canvas.height
 
 var
   framesPerSecond = 60,
-
-  ball = new Ball({
-    radius: 10,
-    speed: 5
-  }),
-
-  paddle = new Paddle({
-    width: 50,
-    speed: 10
-  })
+  paddle = new Paddle({width: 50, speed: 10}),
+  balls = [
+    new Ball({radius: 15, speed: 8}),
+  ],
+  bricks = [],
+  _obstacles = [paddle]
 ;
 
 paddle.addListeners();
 
 setInterval(function() {
   _context.clear();
-  ball.draw();
+  balls.forEach(function(ball) { ball.draw(); });
+  bricks.forEach(function(brick) { brick.draw(); });
   paddle.draw();
-
 }, 1000 / framesPerSecond);
