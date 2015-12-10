@@ -33,7 +33,7 @@ Rectangle.prototype.draw = function() {
   _context.closePath();
 }
 
-// Paddle < Obstacle
+// Paddle < Rectangle
 
 function Paddle(obj) {
   Rectangle.call(this, obj);
@@ -83,7 +83,7 @@ addPrototypeFunctions(Paddle.prototype, {
   }
 });
 
-// Brick < Obstacle
+// Brick < Rectangle
 
 function Brick(obj) {
   Rectangle.call(this, obj);
