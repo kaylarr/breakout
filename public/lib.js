@@ -3,6 +3,12 @@ function initCanvas() {
   _context = _canvas.getContext('2d');
 }
 
+var _app = {
+  endGame: function() {
+    console.log("Bottom");
+  }
+};
+
 // Inheritance assistants
 
 function inheritPrototype(child, parent) {
@@ -15,7 +21,7 @@ function addPrototypeFunctions(proto, functions) {
   for (var name in functions) { proto[name] = functions[name]; }
 }
 
-// Obstacle
+// Rectangle
 // Inherit via parasitic combination inheritance
 
 function Rectangle(obj) {
@@ -107,9 +113,10 @@ addPrototypeFunctions(Brick.prototype, {
 
 function Ball(obj) {
   this.radius = obj.radius;
+  this.speed = obj.speed;
 
   this.x = _canvas.width / 2;
-  this.y = _canvas.height - this.radius;
+  this.y = _canvas.height /2;
 
   var dx = obj.speed;
   var dy = obj.speed;
@@ -122,6 +129,27 @@ function Ball(obj) {
 }
 
 addPrototypeFunctions(Ball.prototype, {
+  newY: function() { return this.y - this.getDy(); },
+  newX: function() { return this.x + this.getDx(); },
+
+  checkBoundaryCollisions: function() {
+    if (this.newY() - this.radius < 0) { this.reverseDy(); }
+    else if (this.newY() + this.radius > _canvas.height) { this.reverseDy(); _app.endGame(); }
+    this.y -= this.getDy();
+
+    if (this.newX() + this.radius > _canvas.width || this.newX() - this.radius < 0) { this.reverseDx(); }
+    this.x += this.getDx();
+  },
+
+  checkObstacleCollisions: function() {
+    for (var i = 0; i < _obstacles.length; i++) {
+      var rect = _obstacles[i];
+      if (this.willHitRectangle(rect)) {
+        if (this.hitsHorizontal(rect)) { this.reverseDy(); }
+        else { this.reverseDx(); }
+      }
+    }
+  },
 
   draw: function() {
     this.updatePosition()
@@ -133,17 +161,26 @@ addPrototypeFunctions(Ball.prototype, {
     _context.closePath();
   },
 
-  updatePosition: function() {
-    var newX = this.x + this.getDx();
-    if (newX + this.radius > _canvas.width || newX - this.radius < 0) { this.reverseDx(); }
-    this.x += this.getDx();
+  hitsHorizontal: function(rectangle) {
+    return fallsWithinX(rectangle) 
+  },
 
-    var newY = this.y - this.getDy();
-    if (newY - this.radius < 0) { this.reverseDy(); }
-    else if (newY + this.radius > _canvas.height) {
-      console.log("Bottom");
-      this.reverseDy();
-    }
-    this.y -= this.getDy();
+  updatePosition: function() {
+    this.checkBoundaryCollisions();
+    this.checkObstacleCollisions();
+  },
+
+  willHitRectangle: function(rectangle) {
+    return this.fallsWithinX(rectangle) && this.fallsWithinY(rectangle);
+  },
+
+  fallsWithinX: function(rectangle) {
+    return this.newX() + this.radius >= rectangle.x &&
+           this.newX() - this.radius <= rectangle.x + rectangle.width;
+  },
+
+  fallsWithinY: function(rectangle) {
+    return this.newY() + this.radius >= rectangle.y &&
+           this.newY() - this.radius <= rectangle.y + rectangle.height;
   }
 });
