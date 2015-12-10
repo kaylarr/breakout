@@ -1,62 +1,51 @@
-function init() {
+function initCanvas() {
   _canvas = document.getElementsByTagName('canvas')[0];
   _context = _canvas.getContext('2d');
 }
 
-function Ball(obj) {
-  this.radius = obj.radius;
+// Inheritance assistants
 
-  this.x = _canvas.width / 2;
-  this.y = _canvas.height - this.radius;
-
-  var dx = obj.speed;
-  var dy = obj.speed;
-
-  this.getDx = function() { return dx; };
-  this.getDy = function() { return dy; };
-
-  this.reverseDx = function() { dx = -dx; };
-  this.reverseDy = function() { dy = -dy; };
+function inheritPrototype(child, parent) {
+  var proto = Object.create(parent.prototype);
+  proto.constructor = child;
+  child.prototype = proto;
 }
 
-Ball.prototype = {
-  draw: function() {
-    this.updatePosition()
-
-    _context.beginPath();
-    _context.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-    _context.fillStyle = '#fff';
-    _context.fill();
-    _context.closePath();
-  },
-
-  updatePosition: function() {
-    var newX = this.x + this.getDx();
-    if (newX + this.radius > _canvas.width || newX - this.radius < 0) { this.reverseDx(); }
-    this.x += this.getDx();
-
-    var newY = this.y - this.getDy();
-    if (newY - this.radius < 0) { this.reverseDy(); }
-    else if (newY + this.radius > _canvas.height) {
-      console.log("Bottom");
-      this.reverseDy();
-    }
-    this.y -= this.getDy();
-  }
+function addPrototypeFunctions(proto, functions) {
+  for (var name in functions) { proto[name] = functions[name]; }
 }
+
+// Obstacle
+// Inherit via parasitic combination inheritance
+
+function Rectangle(obj) {
+  this.width = obj.width;
+  this.height = obj.height || obj.width;
+  this.x = obj.x;
+  this.y = obj.y;
+}
+
+Rectangle.prototype.draw = function() {
+  _context.beginPath();
+  _context.rect(this.x, this.y, this.width, this.height);
+  _context.fillStyle = '#fff';
+  _context.fill();
+  _context.closePath();
+}
+
+// Paddle < Obstacle
 
 function Paddle(obj) {
-  var distanceFromBottom = 10;
+  Rectangle.call(this, obj);
 
-  this.height = 10;
-  this.width = obj.width;
   this.speed = obj.speed;
-
-  this.x = _canvas.width / 2;
-  this.y = _canvas.height - this.height - distanceFromBottom;
+  this.x = this.x || _canvas.width / 2;
+  this.y = this.y || _canvas.height - this.height;
 }
 
-Paddle.prototype = {
+inheritPrototype(Paddle, Rectangle);
+addPrototypeFunctions(Paddle.prototype, {
+
   addListeners: function() {
     document.addEventListener('keydown', this, false);
     document.addEventListener('keyup', this, false);
@@ -69,12 +58,7 @@ Paddle.prototype = {
 
   draw: function() {
     this.updatePosition();
-
-    _context.beginPath();
-    _context.rect(this.x, this.y, this.width, this.height);
-    _context.fillStyle = '#fff';
-    _context.fill();
-    _context.closePath();
+    Rectangle.prototype.draw.call(this);
   },
 
   handleEvent: function(event) {
@@ -107,5 +91,59 @@ Paddle.prototype = {
     if (this.isMovingUp() && this.canMoveUp()) { this.y -= this.speed; }
     else if (this.isMovingDown() && this.canMoveDown()) { this.y += this.speed; }
   }
+});
+
+// Brick < Obstacle
+
+function Brick(obj) {
+  Rectangle.call(this, obj);
 }
 
+inheritPrototype(Brick, Rectangle);
+addPrototypeFunctions(Brick.prototype, {
+});
+
+// Ball
+
+function Ball(obj) {
+  this.radius = obj.radius;
+
+  this.x = _canvas.width / 2;
+  this.y = _canvas.height - this.radius;
+
+  var dx = obj.speed;
+  var dy = obj.speed;
+
+  this.getDx = function() { return dx; };
+  this.getDy = function() { return dy; };
+
+  this.reverseDx = function() { dx = -dx; };
+  this.reverseDy = function() { dy = -dy; };
+}
+
+addPrototypeFunctions(Ball.prototype, {
+
+  draw: function() {
+    this.updatePosition()
+
+    _context.beginPath();
+    _context.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+    _context.fillStyle = '#fff';
+    _context.fill();
+    _context.closePath();
+  },
+
+  updatePosition: function() {
+    var newX = this.x + this.getDx();
+    if (newX + this.radius > _canvas.width || newX - this.radius < 0) { this.reverseDx(); }
+    this.x += this.getDx();
+
+    var newY = this.y - this.getDy();
+    if (newY - this.radius < 0) { this.reverseDy(); }
+    else if (newY + this.radius > _canvas.height) {
+      console.log("Bottom");
+      this.reverseDy();
+    }
+    this.y -= this.getDy();
+  }
+});
