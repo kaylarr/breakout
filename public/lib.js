@@ -1,7 +1,16 @@
-function initCanvas() {
-  _canvas = document.getElementsByTagName('canvas')[0];
-  _context = _canvas.getContext('2d');
+function app() {
+  return {
+    init: function(fps) {
+      _canvas = document.getElementsByTagName('canvas')[0];
+      _context = _canvas.getContext('2d');
+      _playing = true;
+      _objects = [];
+
+      this.fps = fps;
+    }
+  }
 }
+
 
 // Inheritance assistants
 
@@ -15,6 +24,7 @@ function addPrototypeFunctions(proto, functions) {
   for (var name in functions) { proto[name] = functions[name]; }
 }
 
+
 // Rectangle
 // Inherit via parasitic combination inheritance
 
@@ -23,6 +33,7 @@ function Rectangle(obj) {
   this.height = obj.height;
   this.x = obj.x;
   this.y = obj.y;
+  _objects.push(this);
 }
 
 Rectangle.prototype.draw = function() {
@@ -33,6 +44,7 @@ Rectangle.prototype.draw = function() {
   _context.closePath();
 }
 
+
 // Paddle < Rectangle
 
 function Paddle(obj) {
@@ -41,6 +53,8 @@ function Paddle(obj) {
   this.speed = obj.speed;
   this.x = this.x || _canvas.width / 2;
   this.y = this.y || _canvas.height - this.height;
+
+  this.addListeners();
 }
 
 inheritPrototype(Paddle, Rectangle);
@@ -83,28 +97,36 @@ addPrototypeFunctions(Paddle.prototype, {
   }
 });
 
-// Brick < Rectangle
 
-function Brick(obj) {
-  Rectangle.call(this, obj);
+// Circle
+
+function Circle(obj) {
+  this.x = obj.x || _canvas.width / 2;
+  this.y = obj.y || _canvas.height / 2;
+  this.radius = obj.radius;
 }
 
-inheritPrototype(Brick, Rectangle);
-addPrototypeFunctions(Brick.prototype, {
-});
+Circle.prototype.draw = function() {
+  _context.beginPath();
+  _context.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+  _context.fillStyle = '#fff';
+  _context.fill();
+  _context.closePath();
+}
+
 
 // Ball
 
 function Ball(obj) {
-  this.radius = obj.radius;
-
-  this.x = _canvas.width / 2;
-  this.y = _canvas.height /2;
+  Circle.call(this, obj);
 
   this.dx = obj.speed;
   this.dy = obj.speed;
+
+  _objects.push(this);
 }
 
+inheritPrototype(Ball, Circle);
 addPrototypeFunctions(Ball.prototype, {
 
   newY: function() { return this.y - this.dy; },
@@ -122,9 +144,9 @@ addPrototypeFunctions(Ball.prototype, {
     }
   },
 
-  checkObstacleCollisions: function() {
-    for (var i = 0; i < _obstacles.length; i++) {
-      var object = _obstacles[i];
+  checkObjectCollisions: function() {
+    for (var i = 0; i < _objects.length; i++) {
+      var object = _objects[i];
 
       if (this.willHit(object)) {
         this.reverseDy();
@@ -134,23 +156,15 @@ addPrototypeFunctions(Ball.prototype, {
   },
 
   draw: function() {
-    this.updatePosition()
-
-    _context.beginPath();
-    _context.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-    _context.fillStyle = '#fff';
-    _context.fill();
-    _context.closePath();
+    this.updatePosition();
+    Circle.prototype.draw.call(this);
   },
 
   hitTheBottom: function() {
     this.reverseDy();
     this.superSpeed();
 
-    if (this.isTooFast()) {
-      alert("Game Over");
-      _playing = false;
-    }
+    if (this.isTooFast()) { _playing = false; }
   },
 
   isTooFast: function() { return this.dy > 30; },
@@ -178,7 +192,7 @@ addPrototypeFunctions(Ball.prototype, {
 
   updatePosition: function() {
     this.checkBoundaryCollisions();
-    this.checkObstacleCollisions();
+    this.checkObjectCollisions();
     this.x += this.dx;
     this.y -= this.dy;
   },
