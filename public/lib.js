@@ -1,18 +1,15 @@
 function app() {
   return {
-    init: function(fps) {
-      _canvas = document.getElementsByTagName('canvas')[0];
-      _context = _canvas.getContext('2d');
-      _playing = true;
-      _objects = [];
-
-      this.fps = fps;
+    init: function(obj) {
+      this.canvas = document.getElementsByTagName('canvas')[0];
+      this.context = _app.canvas.getContext('2d');
+      this.playing = true;
+      this.objects = [];
+      this.fps = obj.fps;
     }
   }
 }
 
-
-// Inheritance assistants
 
 function inheritPrototype(child, parent) {
   var proto = Object.create(parent.prototype);
@@ -25,34 +22,29 @@ function addPrototypeFunctions(proto, functions) {
 }
 
 
-// Rectangle
-// Inherit via parasitic combination inheritance
-
 function Rectangle(obj) {
   this.width = obj.width;
   this.height = obj.height;
   this.x = obj.x;
   this.y = obj.y;
-  _objects.push(this);
+  _app.objects.push(this);
 }
 
 Rectangle.prototype.draw = function() {
-  _context.beginPath();
-  _context.rect(this.x, this.y, this.width, this.height);
-  _context.fillStyle = '#fff';
-  _context.fill();
-  _context.closePath();
+  _app.context.beginPath();
+  _app.context.rect(this.x, this.y, this.width, this.height);
+  _app.context.fillStyle = '#fff';
+  _app.context.fill();
+  _app.context.closePath();
 }
 
-
-// Paddle < Rectangle
 
 function Paddle(obj) {
   Rectangle.call(this, obj);
 
   this.speed = obj.speed;
-  this.x = this.x || _canvas.width / 2;
-  this.y = this.y || _canvas.height - this.height;
+  this.x = this.x || _app.canvas.width / 2;
+  this.y = this.y || _app.canvas.height - this.height;
 
   this.addListeners();
 }
@@ -66,7 +58,7 @@ addPrototypeFunctions(Paddle.prototype, {
   },
 
   canMoveLeft:  function() { return this.x > 0; },
-  canMoveRight: function() { return this.x < _canvas.width - this.width; },
+  canMoveRight: function() { return this.x < _app.canvas.width - this.width; },
 
   draw: function() {
     this.updatePosition();
@@ -92,30 +84,32 @@ addPrototypeFunctions(Paddle.prototype, {
   isMovingRight: function() { return this.keyRight && !this.keyLeft; },
 
   updatePosition: function() {
-    if (this.isMovingLeft() && this.canMoveLeft()) { this.x -= this.speed; }
-    else if (this.isMovingRight() && this.canMoveRight()) { this.x += this.speed; }
+    if (this.isMovingLeft() && this.canMoveLeft()) {
+      this.x -= this.speed;
+    }
+    else if (this.isMovingRight() && this.canMoveRight()) {
+      this.x += this.speed;
+    }
   }
 });
 
 
-// Circle
 
 function Circle(obj) {
-  this.x = obj.x || _canvas.width / 2;
-  this.y = obj.y || _canvas.height / 2;
+  this.x = obj.x || _app.canvas.width / 2;
+  this.y = obj.y || _app.canvas.height / 2;
   this.radius = obj.radius;
 }
 
 Circle.prototype.draw = function() {
-  _context.beginPath();
-  _context.arc(this.x, this.y, this.radius, 0, Math.PI*2);
-  _context.fillStyle = '#fff';
-  _context.fill();
-  _context.closePath();
+  _app.context.beginPath();
+  _app.context.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+  _app.context.fillStyle = '#fff';
+  _app.context.fill();
+  _app.context.closePath();
 }
 
 
-// Ball
 
 function Ball(obj) {
   Circle.call(this, obj);
@@ -123,7 +117,7 @@ function Ball(obj) {
   this.dx = obj.speed;
   this.dy = obj.speed;
 
-  _objects.push(this);
+  _app.objects.push(this);
 }
 
 inheritPrototype(Ball, Circle);
@@ -135,18 +129,18 @@ addPrototypeFunctions(Ball.prototype, {
   checkBoundaryCollisions: function() {
     if (this.newY() - this.radius < 0) {
       this.reverseDy();
-    } else if (this.newY() + this.radius > _canvas.height) {
+    } else if (this.newY() + this.radius > _app.canvas.height) {
       this.hitTheBottom();
     }
 
-    if (this.newX() + this.radius > _canvas.width || this.newX() - this.radius < 0) {
+    if (this.newX() + this.radius > _app.canvas.width || this.newX() - this.radius < 0) {
       this.reverseDx();
     }
   },
 
   checkObjectCollisions: function() {
-    for (var i = 0; i < _objects.length; i++) {
-      var object = _objects[i];
+    for (var i = 0; i < _app.objects.length; i++) {
+      var object = _app.objects[i];
 
       if (this.willHit(object)) {
         this.reverseDy();
@@ -164,7 +158,7 @@ addPrototypeFunctions(Ball.prototype, {
     this.reverseDy();
     this.superSpeed();
 
-    if (this.isTooFast()) { _playing = false; }
+    if (this.isTooFast()) { _app.playing = false; }
   },
 
   isTooFast: function() { return this.dy > 30; },

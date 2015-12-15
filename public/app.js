@@ -1,19 +1,19 @@
 var _app = app();
-_app.init(60);
+_app.init({fps: 60});
 
-_canvas.width  = window.innerWidth;
-_canvas.height = window.innerHeight;
-_canvas.setAttribute('style', 'background: black;');
+_app.canvas.width  = window.innerWidth;
+_app.canvas.height = window.innerHeight;
+_app.canvas.setAttribute('style', 'background: black;');
 
-_context.clear = function() { this.clearRect(0, 0, _canvas.width, _canvas.height); }
+_app.context.clear = function() { this.clearRect(0, 0, _app.canvas.width, _app.canvas.height); }
 
 new Paddle({height: 25, width: 150, speed: 20});
 new Ball({radius: 25, speed: 8});
 
 var game = setInterval(function() {
-  _context.clear();
-  if (_playing) {
-    _objects.forEach(function(object) { object.draw(); });
+  _app.context.clear();
+  if (_app.playing) {
+    _app.objects.forEach(function(object) { object.draw(); });
   }
   else {
     clearInterval(game);
