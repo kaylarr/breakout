@@ -6,7 +6,37 @@ function app() {
       this.playing = true;
       this.objects = [];
       this.fps = obj.fps;
-    }
+
+      // this.brickProps = {
+        // width: 75,
+        // height: 20,
+
+        // offsetTop: 30,
+        // offsetLeft: 30,
+        // padding: 10,
+
+        // rowCount: 3,
+        // columnCount: 5
+      // };
+
+      // this.addBricks();
+    },
+
+    // addBricks: function() {
+      // for (var c = 0; c < this.brickProps.columnCount; c++) {
+        // for (var r = 0; r < this.brickProps.rowCount; r++) {
+          // var xPosition = c * (this.brickProps.width + this.brickProps.padding) + this.brickProps.offsetLeft;
+          // var yPosition = r * (this.brickProps.height + this.brickProps.padding) + this.brickProps.offsetTop;
+          // new Brick({
+            // x: xPosition,
+            // y: yPosition,
+            // width: this.brickProps.width,
+            // height: this.brickProps.height
+          // });
+        // }
+      // }
+    // }
+
   }
 }
 
@@ -37,6 +67,21 @@ Rectangle.prototype.draw = function() {
   _app.context.fill();
   _app.context.closePath();
 }
+
+
+function Brick(obj) {
+  Rectangle.call(this, obj);
+}
+
+inheritPrototype(Brick, Rectangle);
+addPrototypeFunctions(Brick.prototype, {
+
+  destroy: function() {
+    var index = _app.objects.indexOf(this)
+    _app.objects.splice(index, 1);
+  }
+
+});
 
 
 function Paddle(obj) {
@@ -144,7 +189,8 @@ addPrototypeFunctions(Ball.prototype, {
 
       if (this.willHit(object)) {
         this.reverseDy();
-        if (object instanceof Paddle) { this.reactToMovementOf(object); }
+        if (object instanceof Paddle)     { this.reactToMovementOf(object); }
+        // else if (object instanceof Brick) { object.destroy(); }
       }
     }
   },
