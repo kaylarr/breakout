@@ -58,14 +58,15 @@ function Rectangle(obj) {
   this.y = obj.y;
   _app.objects.push(this);
 }
-
-Rectangle.prototype.draw = function() {
-  _app.context.beginPath();
-  _app.context.rect(this.x, this.y, this.width, this.height);
-  _app.context.fillStyle = '#fff';
-  _app.context.fill();
-  _app.context.closePath();
-}
+addPrototypeFunctions(Rectangle.prototype, {
+  draw: function() {
+    _app.context.beginPath();
+    _app.context.rect(this.x, this.y, this.width, this.height);
+    _app.context.fillStyle = '#fff';
+    _app.context.fill();
+    _app.context.closePath();
+  }
+});
 
 
 function Brick(obj) {
@@ -176,21 +177,19 @@ addPrototypeFunctions(Ball.prototype, {
   left:   function() { return this.newX() - this.radius },
 
   bounceOff: function(object) {
-    switch (true) {
-      case this.hitTopOf(object) || this.hitBottomOf(object):
-        console.log('horizontal');
+    if (object instanceof Paddle && object.isMoving()) {
+      this.reactToMovementOf(object);
+    }
+    else {
+      if (this.hitTopOf(object) || this.hitBottomOf(object)) {
         this.reverseDy();
-        break;
-
-      case this.hitRightOf(object) || this.hitLeftOf(object):
-        console.log('vertical');
+      }
+      else if (this.hitRightOf(object) || this.hitLeftOf(object)) {
         this.reverseDx();
-        break;
-
-      case true:
-        console.log('corner');
+      }
+      else {
         this.reverseDy();
-        break;
+      }
     }
   },
 
@@ -211,10 +210,8 @@ addPrototypeFunctions(Ball.prototype, {
       var object = _app.objects[i];
 
       if (this.willHit(object)) {
-
         this.bounceOff(object);
-        if (object instanceof Paddle)     { this.reactToMovementOf(object); }
-        else if (object instanceof Brick) { object.destroy(); }
+        if (object instanceof Brick) { object.destroy(); }
       }
     }
   },
@@ -259,33 +256,83 @@ addPrototypeFunctions(Ball.prototype, {
       this.y <= object.y + object.height;
   },
 
+  hitsSideOf: function(object) {
+    return this.hitRightOf(object) || this.hitLeftOf(object);
+  },
+
   isStationary: function() { return this.dx == 0 },
+
   isTooFast: function() { return this.dy > 30; },
 
   matchesDirectionOf: function(object) {
-    if (object.isMovingRight())     { return this.dx > 0; }
-    else if (object.isMovingLeft()) { return this.dx < 0; }
-    else { return false; }
+    if (object.isMovingRight()) {
+      return this.dx > 0;
+    }
+    else if (object.isMovingLeft()) {
+      return this.dx < 0;
+    }
+    else {
+      return false;
+    }
   },
 
   reactToMovementOf: function(object) {
-    if (object.isMoving()) {
-      if (this.isStationary() || this.matchesDirectionOf(object)) {
-        console.log('sped up');
-        this.speedUp();
+    // When ball without x movement hits top of moving paddle and takes on movement
+    if (this.isStationary()) {
+      this.dx = object.isMovingRight() ? 1 : -1;
+      this.reverseDy();
+    }
+
+    // When ball hits side of paddle
+    else if (this.hitsSideOf(object)) {
+
+      // When ball and paddle are moving in the same direction
+      if (this.matchesDirectionOf(object)) {
+
+        // When ball is moving faster and toward paddle
+        if (Math.abs(this.dx) > Math.abs(object.speed)) {
+          // Ball loses a lot of speed
+          this.dx -= this.dx > 0 ? object.speed : -object.speed;
+          // Ball bounces off of paddle
+          this.reverseDx();
+          }
+
+        // When paddle is moving faster and toward ball
+        else {
+          // Ball gains a lot of speed
+          this.dx += this.dx > 0 ? object.speed : -object.speed;
+        }
       }
+
+      // When ball and paddle are moving toward one another
       else {
-        console.log('sped dn');
-        this.speedDown();
+        // Ball gains momentum from paddle
+        this.dx += this.dx > 0 ? object.speed : -object.speed
+        this.reverseDx();
       }
+    }
+
+    // When ball has x movement and hits top of paddle
+    else {
+      if (this.matchesDirectionOf(object)) { this.speedUp(); }
+      else { this.speedDown(); }
+      this.reverseDy();
     }
   },
 
   reverseDx: function() { this.dx = -this.dx; },
   reverseDy: function() { this.dy = -this.dy; },
 
-  speedUp:    function() { this.dx++; },
-  speedDown:  function() { this.dx < 0 ? this.dx++ : this.dx },
+  speedUp: function() {
+    if (this.dx >= 0) { this.dx++; }
+    else { this.dx--; }
+  },
+
+  speedDown:  function() {
+    if (this.dx > 0) { this.dx--; }
+    else if (this.dx < 0) { this.dx++; }
+  },
+
   superSpeed: function() { this.dy = this.dy + 2; },
 
   updatePosition: function() {
@@ -296,15 +343,15 @@ addPrototypeFunctions(Ball.prototype, {
   },
 
   willHit: function(object) {
-    return this.withinX(object) && this.withinY(object);
+    return this.willBeWithinX(object) && this.willBeWithinY(object);
   },
 
-  withinX: function(object) {
+  willBeWithinX: function(object) {
     return this.newX() + this.radius >= object.x &&
            this.newX() - this.radius <= object.x + object.width;
   },
 
-  withinY: function(object) {
+  willBeWithinY: function(object) {
     return this.newY() + this.radius >= object.y &&
            this.newY() - this.radius <= object.y + object.height;
   }
