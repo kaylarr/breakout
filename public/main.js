@@ -12,10 +12,10 @@ new Ball({radius: 25, speed: 8});
 
 var game = setInterval(function() {
   _app.context.clear();
-  if (_app.playing) {
-    _app.objects.forEach(function(object) { object.draw(); });
-  }
-  else {
-    clearInterval(game);
-  }
+
+  _app.objects.forEach(function(object) { object.draw(); });
+  _app.score.increment();
+  _app.score.draw();
+
+  if (!_app.playing) { clearInterval(game); }
 }, 1000 / _app.fps);

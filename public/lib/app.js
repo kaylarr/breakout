@@ -24,6 +24,7 @@ function app() {
       this.playing = true;
       this.objects = [];
       this.fps = obj.fps;
+      this.score = new Score;
 
       this.brickProps = {
         width: 75,

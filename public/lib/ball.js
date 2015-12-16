@@ -172,14 +172,19 @@ addPrototypeFunctions(Ball.prototype, {
   speedUp: function() {
     if (this.dx >= 0) { this.dx++; }
     else { this.dx--; }
+    _app.score.changeFrom('ball sped up');
   },
 
   speedDown:  function() {
     if (this.dx > 0) { this.dx--; }
     else if (this.dx < 0) { this.dx++; }
+    _app.score.changeFrom('ball sped down');
   },
 
-  superSpeed: function() { this.dy = this.dy + 2; },
+  superSpeed: function() {
+    this.dy = this.dy + 2;
+    _app.score.changeFrom('ball hit bottom');
+  },
 
   updatePosition: function() {
     this.checkBoundaryCollisions();
