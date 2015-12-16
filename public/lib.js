@@ -7,36 +7,35 @@ function app() {
       this.objects = [];
       this.fps = obj.fps;
 
-      // this.brickProps = {
-        // width: 75,
-        // height: 20,
+      this.brickProps = {
+        width: 75,
+        height: 20,
 
-        // offsetTop: 30,
-        // offsetLeft: 30,
-        // padding: 10,
+        offsetTop: 30,
+        offsetLeft: 300,
+        padding: 10,
 
-        // rowCount: 3,
-        // columnCount: 5
-      // };
+        rowCount: 6,
+        columnCount: 2
+      };
 
-      // this.addBricks();
+      this.addBricks();
     },
 
-    // addBricks: function() {
-      // for (var c = 0; c < this.brickProps.columnCount; c++) {
-        // for (var r = 0; r < this.brickProps.rowCount; r++) {
-          // var xPosition = c * (this.brickProps.width + this.brickProps.padding) + this.brickProps.offsetLeft;
-          // var yPosition = r * (this.brickProps.height + this.brickProps.padding) + this.brickProps.offsetTop;
-          // new Brick({
-            // x: xPosition,
-            // y: yPosition,
-            // width: this.brickProps.width,
-            // height: this.brickProps.height
-          // });
-        // }
-      // }
-    // }
-
+    addBricks: function() {
+      for (var c = 0; c < this.brickProps.columnCount; c++) {
+        for (var r = 0; r < this.brickProps.rowCount; r++) {
+          var xPosition = c * (this.brickProps.width + this.brickProps.padding) + this.brickProps.offsetLeft;
+          var yPosition = r * (this.brickProps.height + this.brickProps.padding) + this.brickProps.offsetTop;
+          new Brick({
+            x: xPosition,
+            y: yPosition,
+            width: this.brickProps.width,
+            height: this.brickProps.height
+          });
+        }
+      }
+    }
   }
 }
 
@@ -171,6 +170,30 @@ addPrototypeFunctions(Ball.prototype, {
   newY: function() { return this.y - this.dy; },
   newX: function() { return this.x + this.dx; },
 
+  top:    function() { return this.newY() - this.radius },
+  bottom: function() { return this.newY() + this.radius },
+  right:  function() { return this.newX() + this.radius },
+  left:   function() { return this.newX() - this.radius },
+
+  bounceOff: function(object) {
+    switch (true) {
+      case this.hitTopOf(object) || this.hitBottomOf(object):
+        console.log('horizontal');
+        this.reverseDy();
+        break;
+
+      case this.hitRightOf(object) || this.hitLeftOf(object):
+        console.log('vertical');
+        this.reverseDx();
+        break;
+
+      case true:
+        console.log('corner');
+        this.reverseDy();
+        break;
+    }
+  },
+
   checkBoundaryCollisions: function() {
     if (this.newY() - this.radius < 0) {
       this.reverseDy();
@@ -188,9 +211,10 @@ addPrototypeFunctions(Ball.prototype, {
       var object = _app.objects[i];
 
       if (this.willHit(object)) {
-        this.reverseDy();
+
+        this.bounceOff(object);
         if (object instanceof Paddle)     { this.reactToMovementOf(object); }
-        // else if (object instanceof Brick) { object.destroy(); }
+        else if (object instanceof Brick) { object.destroy(); }
       }
     }
   },
@@ -207,6 +231,35 @@ addPrototypeFunctions(Ball.prototype, {
     if (this.isTooFast()) { _app.playing = false; }
   },
 
+  hitTopOf: function(object) {
+    return this.bottom() <= object.y + object.height &&
+      this.bottom() >= object.y &&
+      this.x >= object.x &&
+      this.x <= object.x + object.width;
+  },
+
+  hitBottomOf: function(object) {
+    return this.top() <= object.y + object.height &&
+      this.top() >= object.y &&
+      this.x >= object.x &&
+      this.x <= object.x + object.width;
+  },
+
+  hitLeftOf: function(object) {
+    return this.right() <= object.x + object.width &&
+      this.right() >= object.x &&
+      this.y >= object.y &&
+      this.y <= object.y + object.height;
+  },
+
+  hitRightOf: function(object) {
+    return this.left() <= object.x + object.width &&
+      this.left() >= object.x &&
+      this.y >= object.y &&
+      this.y <= object.y + object.height;
+  },
+
+  isStationary: function() { return this.dx == 0 },
   isTooFast: function() { return this.dy > 30; },
 
   matchesDirectionOf: function(object) {
@@ -216,17 +269,22 @@ addPrototypeFunctions(Ball.prototype, {
   },
 
   reactToMovementOf: function(object) {
-    if (object.isMoving() && this.matchesDirectionOf(object)) {
-      this.speedUp();
-    } else if (object.isMoving()) {
-      this.speedDown();
+    if (object.isMoving()) {
+      if (this.isStationary() || this.matchesDirectionOf(object)) {
+        console.log('sped up');
+        this.speedUp();
+      }
+      else {
+        console.log('sped dn');
+        this.speedDown();
+      }
     }
   },
 
   reverseDx: function() { this.dx = -this.dx; },
   reverseDy: function() { this.dy = -this.dy; },
 
-  speedUp:    function() { this.dx > 0 ? this.dx++ : this.dx },
+  speedUp:    function() { this.dx++; },
   speedDown:  function() { this.dx < 0 ? this.dx++ : this.dx },
   superSpeed: function() { this.dy = this.dy + 2; },
 
