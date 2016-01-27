@@ -1,0 +1,24 @@
+{
+  "name": "breakout",
+  "version": "0.1.0",
+  "description": "break out",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.13.4",
+    "jade": "^1.11.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaylarr/breakout.git"
+  },
+  "author": "kaylarr",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kaylarr/breakout/issues"
+  },
+  "homepage": "https://github.com/kaylarr/breakout#readme"
+}
