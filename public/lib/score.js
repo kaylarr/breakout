@@ -1,13 +1,8 @@
-//
-// Score
-//
-
 function Score() {
   this.value = 0;
   this.multiplier = 1;
 }
-
-addPrototypeFunctions(Score.prototype, {
+Object.assign(Score.prototype, {
 
   draw: function() {
     _app.context.font = "20pt Arial";

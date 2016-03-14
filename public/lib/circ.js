@@ -1,7 +1,3 @@
-//
-// Circle
-//
-
 function Circle(obj) {
   this.x = obj.x || _app.canvas.width / 2;
   this.y = obj.y || _app.canvas.height / 2;

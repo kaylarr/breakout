@@ -1,7 +1,3 @@
-//
-// Paddle < Rectangle
-//
-
 function Paddle(obj) {
   Rectangle.call(this, obj);
 
@@ -13,7 +9,8 @@ function Paddle(obj) {
 }
 
 inheritPrototype(Paddle, Rectangle);
-addPrototypeFunctions(Paddle.prototype, {
+
+Object.assign(Paddle.prototype, {
 
   addListeners: function() {
     document.addEventListener('keydown', this, false);
@@ -42,7 +39,7 @@ addPrototypeFunctions(Paddle.prototype, {
     }
   },
 
-  isMoving: function() { return this.isMovingLeft() || this.isMovingRight(); },
+  isMoving:      function() { return this.isMovingLeft() || this.isMovingRight(); },
   isMovingLeft:  function() { return this.keyLeft  && !this.keyRight; },
   isMovingRight: function() { return this.keyRight && !this.keyLeft; },
 

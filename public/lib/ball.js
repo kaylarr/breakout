@@ -1,7 +1,3 @@
-//
-// Ball < Circle
-//
-
 function Ball(obj) {
   Circle.call(this, obj);
 
@@ -12,7 +8,8 @@ function Ball(obj) {
 }
 
 inheritPrototype(Ball, Circle);
-addPrototypeFunctions(Ball.prototype, {
+
+Object.assign(Ball.prototype, {
 
   newY: function() { return this.y - this.dy; },
   newX: function() { return this.x + this.dx; },

@@ -1,20 +1,8 @@
-//
-// Inheritance
-//
-
 function inheritPrototype(child, parent) {
   var proto = Object.create(parent.prototype);
   proto.constructor = child;
   child.prototype = proto;
 }
-
-function addPrototypeFunctions(proto, functions) {
-  for (var name in functions) { proto[name] = functions[name]; }
-}
-
-//
-// App
-//
 
 function app() {
   return {
