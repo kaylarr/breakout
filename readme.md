@@ -1,9 +1,7 @@
-#breakout
+# breakout
 
 An exercise in object-oriented JavaScript, utilizing the Canvas rendering
 context
-
-Play it at http://crude.computer/breakout
 
 ## Instructions
 
